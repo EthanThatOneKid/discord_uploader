@@ -5,10 +5,35 @@
 </head>
 <body>
 	<h2>File Upload Form</h2>
-	<form action="#" method="post" enctype="multipart/form-data">
-		<label for="file">Select a file:</label>
-		<input type="file" name="file" id="file"><br><br>
-		<input type="submit" value="Upload">
-	</form>
+
+	<button id="btn">Upload</button>
+
+	<script>
+		// const webpFile = new File(["Hello, world!"], "hello.webp", {
+		// 	type: "image/webp",
+		// });
+
+		const file = new File(["Hello, world!"], "hello.txt", {
+			type: "text/plain",
+		});
+
+		const formData = new FormData();
+		formData.append("file", file, file.name);
+
+		const btn = document.getElementById("btn");
+		btn.addEventListener("click", () => {
+			fetch("/", {
+				method: "POST",
+				body: formData,
+			})
+				.then((response) => response.json())
+				.then((result) => {
+					console.log("Success:", result);
+				})
+				.catch((error) => {
+					console.error("Error:", error);
+				});
+		});
+	</script>
 </body>
 </html>
