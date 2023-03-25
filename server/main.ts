@@ -47,14 +47,23 @@ async function makeWebhookArgs(
   const data = await request.formData();
   const file = data.get("file") as File;
   const payload = new FormData();
-  payload.append("file[0]", file, file.name);
   payload.append(
     "payload_json",
-    JSON.stringify({
-      content: "",
-      attachments: [{ id: "0", filename: file.name }],
-    }),
+    new Blob(
+      [
+        JSON.stringify({
+          "embeds": [{
+            "image": {
+              "url": `attachment://${file.name}`,
+            },
+          }],
+          attachments: [{ id: 0, filename: file.name }],
+        }),
+      ],
+      { type: "application/json" },
+    ),
   );
+  payload.append("files[0]", file, file.name);
 
   const url = new URL(webhookURL);
   url.searchParams.set("wait", "true");
