@@ -1,26 +1,21 @@
 package main
 
 import (
-	"flag"
 	"log"
-	"net/http"
 	"os"
-	"strconv"
+
+	"github.com/apex/gateway"
 
 	"etok.codes/discord_uploader/server"
-	"github.com/joho/godotenv"
 )
 
-var port int
-
 func main() {
-	flag.IntVar(&port, "port", 8000, "port to listen on")
-	flag.Parse()
-
-	if err := godotenv.Load(); err != nil {
-		log.Println("warning: failed to load .env:", err)
+	if err := run(); err != nil {
+		log.Fatalln(err)
 	}
+}
 
+func run() error {
 	webhookURL := os.Getenv("DISCORD_WEBHOOK_URL")
 	if webhookURL == "" {
 		log.Fatalln("$DISCORD_WEBHOOK_URL is not set")
@@ -32,7 +27,5 @@ func main() {
 	}
 
 	h := server.NewHandler(webhook)
-
-	log.Printf("listening on :%d", port)
-	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(port), h))
+	return gateway.ListenAndServe("", h)
 }
