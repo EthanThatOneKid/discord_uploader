@@ -46,5 +46,5 @@ func run() error {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		}
 	}
-	return gateway.ListenAndServe("", http.StripPrefix("/upload", http.HandlerFunc(h)))
+	return gateway.ListenAndServe("", http.HandlerFunc(h))
 }

@@ -36,15 +36,10 @@ type Handler struct {
 }
 
 func NewHandler(webhook *webhook.Client) *Handler {
-	h := &Handler{webhook: webhook}
-
-	h.ServeMux = http.NewServeMux()
-	h.HandleFunc("/", h.handle)
-
-	return h
+	return &Handler{webhook: webhook}
 }
 
-func (h *Handler) handle(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		writeErr(w, http.StatusMethodNotAllowed, errors.New("method not allowed"))
 		return
