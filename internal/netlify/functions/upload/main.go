@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/apex/gateway"
@@ -27,5 +28,5 @@ func run() error {
 	}
 
 	h := server.NewHandler(webhook)
-	return gateway.ListenAndServe("", h)
+	return gateway.ListenAndServe("", http.StripPrefix("/upload", h))
 }
