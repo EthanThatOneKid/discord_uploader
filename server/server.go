@@ -43,9 +43,15 @@ func NewHandler(webhook *webhook.Client) *Handler {
 }
 
 func (h *Handler) handle(w http.ResponseWriter, r *http.Request) {
+	// Set CORS headers
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	// Handle method cases.
 	switch r.Method {
 	case http.MethodGet:
-		http.ServeFile(w, r, "index.html")
+		http.ServeFile(w, r, "examples/00_simple/index.html")
 	case http.MethodPost:
 		if err := r.ParseForm(); err != nil {
 			writeErr(w, http.StatusBadRequest, err)
