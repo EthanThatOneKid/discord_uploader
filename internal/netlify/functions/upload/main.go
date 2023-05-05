@@ -4,11 +4,18 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
+	"time"
+
+	_ "embed"
 
 	"github.com/apex/gateway"
 
 	"etok.codes/discord_uploader/server"
 )
+
+//go:embed index.html
+var indexHTML string
 
 func main() {
 	if err := run(); err != nil {
@@ -27,6 +34,17 @@ func run() error {
 		log.Fatalln("failed to create webhook client:", err)
 	}
 
-	h := server.NewHandler(webhook)
-	return gateway.ListenAndServe("", http.StripPrefix("/upload", h))
+	server := server.NewHandler(webhook)
+
+	h := func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			http.ServeContent(w, r, "index.html", time.Time{}, strings.NewReader(indexHTML))
+		case http.MethodPost:
+			server.ServeHTTP(w, r)
+		default:
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		}
+	}
+	return gateway.ListenAndServe("", http.StripPrefix("/upload", http.HandlerFunc(h)))
 }

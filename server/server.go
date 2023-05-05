@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"regexp"
 
+	_ "embed"
+
 	"github.com/diamondburned/arikawa/v3/api/webhook"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/utils/sendpart"
@@ -43,46 +45,43 @@ func NewHandler(webhook *webhook.Client) *Handler {
 }
 
 func (h *Handler) handle(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeErr(w, http.StatusMethodNotAllowed, errors.New("method not allowed"))
+		return
+	}
+
 	// Set CORS headers
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-	// Handle method cases.
-	switch r.Method {
-	case http.MethodGet:
-		http.ServeFile(w, r, "examples/00_simple/index.html")
-	case http.MethodPost:
-		if err := r.ParseForm(); err != nil {
-			writeErr(w, http.StatusBadRequest, err)
-			return
-		}
-
-		file, fileHeader, err := r.FormFile("file")
-		if err != nil {
-			writeErr(w, http.StatusBadRequest, err)
-			return
-		}
-		defer file.Close()
-
-		msg, err := h.webhook.ExecuteAndWait(webhook.ExecuteData{
-			Files: []sendpart.File{
-				{
-					Name:   fileHeader.Filename,
-					Reader: file,
-				},
-			},
-		})
-		if err != nil {
-			writeErr(w, http.StatusInternalServerError, err)
-			return
-		}
-
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(msg)
-	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
+	if err := r.ParseForm(); err != nil {
+		writeErr(w, http.StatusBadRequest, err)
+		return
 	}
+
+	file, fileHeader, err := r.FormFile("file")
+	if err != nil {
+		writeErr(w, http.StatusBadRequest, err)
+		return
+	}
+	defer file.Close()
+
+	msg, err := h.webhook.ExecuteAndWait(webhook.ExecuteData{
+		Files: []sendpart.File{
+			{
+				Name:   fileHeader.Filename,
+				Reader: file,
+			},
+		},
+	})
+	if err != nil {
+		writeErr(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(msg)
 }
 
 func writeErr(w http.ResponseWriter, code int, err error) {
